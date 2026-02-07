@@ -3,7 +3,9 @@ package db
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"rest_api/internal/models"
+	"rest_api/internal/repository"
 
 	"rest_api/internal/db/sqlc"
 )
@@ -48,6 +50,9 @@ func (ts *TaskStore) List(ctx context.Context, limit, offset int32) ([]models.Ta
 func (ts *TaskStore) GetByID(ctx context.Context, id int64) (*models.Task, error) {
 	r, err := ts.q.GetTaskByID(ctx, id)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, repository.ErrNotFound
+		}
 		return nil, err
 	}
 
@@ -72,8 +77,8 @@ func (ts *TaskStore) Create(ctx context.Context, input models.CreateTaskInput) (
 }
 
 func (ts *TaskStore) Update(ctx context.Context, id int64, input models.UpdateTaskInput) (*models.Task, error) {
-	if input.Title == nil || input.Description == nil || input.Completed == nil {
-		return nil, sql.ErrNoRows
+	if input.Title == nil && input.Description == nil && input.Completed == nil {
+		return nil, errors.New("no fields to update")
 	}
 
 	cur, err := ts.q.GetTaskByID(ctx, id)

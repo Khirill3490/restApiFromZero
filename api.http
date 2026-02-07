@@ -1,0 +1,70 @@
+@baseUrl = http://localhost:8080
+
+### =========================
+### CREATE TASK
+### =========================
+POST {{baseUrl}}/tasks
+Content-Type: application/json
+
+{
+  "title": "Изучить Go",
+  "description": "Разобраться с указателями, chi и sqlc"
+}
+
+### =========================
+### GET ALL TASKS
+### =========================
+GET {{baseUrl}}/tasks
+
+### =========================
+### GET TASK BY ID
+### =========================
+# Заменяй id на нужный
+GET {{baseUrl}}/tasks/1
+
+### =========================
+### UPDATE TASK (PATCH)
+### =========================
+PATCH {{baseUrl}}/tasks/1
+Content-Type: application/json
+
+{
+  "completed": true
+}
+
+### =========================
+### UPDATE TASK (TITLE + DESCRIPTION)
+### =========================
+PATCH {{baseUrl}}/tasks/1
+Content-Type: application/json
+
+{
+  "title": "Изучить Go глубже",
+  "description": "Понять PATCH, middleware и архитектуру"
+}
+
+### =========================
+### DELETE TASK
+### =========================
+DELETE {{baseUrl}}/tasks/1
+
+### =========================
+### NEGATIVE CASES
+### =========================
+
+### Invalid ID
+GET {{baseUrl}}/tasks/abc
+
+### Empty PATCH
+PATCH {{baseUrl}}/tasks/1
+Content-Type: application/json
+
+{}
+
+### Invalid JSON
+POST {{baseUrl}}/tasks
+Content-Type: application/json
+
+{
+  "title": "oops",
+}

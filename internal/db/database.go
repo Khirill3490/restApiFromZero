@@ -1,6 +1,9 @@
 package db
 
-import "database/sql"
+import (
+    "database/sql"
+    _ "github.com/lib/pq"
+)
 
 
 func Connect(dbUrl string) (*sql.DB, error) {
