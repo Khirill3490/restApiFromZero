@@ -34,5 +34,27 @@ services:
         "up"
       ]
 
+ app:
+  build: .
+  container_name: my_app
+  env_file:
+    - .env
+  depends_on:
+    - migrate
+  ports:
+    - "8080:8080"
+  restart: unless-stopped
+
+
+    # build: .
+    # container_name: my_app
+    # env_file:
+    #   - .env
+    # depends_on:
+    #   - migrate
+    # ports:
+    #   - "8080:8080"
+    # restart: unless-stopped
+
 volumes:
   pgdata:

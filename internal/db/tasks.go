@@ -11,14 +11,12 @@ import (
 )
 
 type TaskStore struct {
-	db *sql.DB
-	q  *sqlc.Queries
+	q *sqlc.Queries
 }
 
-func NewTaskStore(db *sql.DB) *TaskStore {
+func NewTaskStore(q *sqlc.Queries) *TaskStore {
 	return &TaskStore{
-		db: db,
-		q:  sqlc.New(db),
+		q: q,
 	}
 }
 

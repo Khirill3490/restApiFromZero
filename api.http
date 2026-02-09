@@ -7,7 +7,7 @@ POST {{baseUrl}}/tasks
 Content-Type: application/json
 
 {
-  "title": "Изучить Go",
+  "title": "Попить чайку",
   "description": "Разобраться с указателями, chi и sqlc"
 }
 
@@ -35,18 +35,18 @@ Content-Type: application/json
 ### =========================
 ### UPDATE TASK (TITLE + DESCRIPTION)
 ### =========================
-PATCH {{baseUrl}}/tasks/1
+PATCH {{baseUrl}}/tasks/13
 Content-Type: application/json
 
 {
-  "title": "Изучить Go глубже",
+  "title": "Изучить Go глубже с чайком",
   "description": "Понять PATCH, middleware и архитектуру"
 }
 
 ### =========================
 ### DELETE TASK
 ### =========================
-DELETE {{baseUrl}}/tasks/1
+DELETE {{baseUrl}}/tasks/2
 
 ### =========================
 ### NEGATIVE CASES
@@ -56,7 +56,7 @@ DELETE {{baseUrl}}/tasks/1
 GET {{baseUrl}}/tasks/abc
 
 ### Empty PATCH
-PATCH {{baseUrl}}/tasks/1
+PATCH {{baseUrl}}/tasks/4
 Content-Type: application/json
 
 {}

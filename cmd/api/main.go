@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"rest_api/internal/db"
+	"rest_api/internal/db/sqlc"
 	"rest_api/internal/handlers"
 
 	"github.com/go-chi/chi/v5"
@@ -23,8 +24,12 @@ func main() {
 	}
 	defer conn.Close()
 
-	store := db.NewTaskStore(conn)
-	handler := handlers.NewHandler(store)
+	queries := sqlc.New(conn)
+
+	taskStore := db.NewTaskStore(queries)
+	userStore := db.NewUserStore(queries)
+
+	handler := handlers.NewHandler(taskStore, userStore)
 
 	r := chi.NewRouter()
 
@@ -32,14 +37,17 @@ func main() {
 	r.Use(middleware.Logger)    // логирует все запросы
 	r.Use(middleware.Recoverer) // не даёт серверу упасть при panic
 
+	r.Route("/auth", func(r chi.Router) {
+		r.Post("/register", handler.Register)
+	})
 	// 6) Роуты
 	r.Route("/tasks", func(r chi.Router) {
-		r.Get("/", handler.GetAllTasks)   // GET /tasks
-		r.Post("/", handler.CreateTask)  // POST /tasks
+		r.Get("/", handler.GetAllTasks) // GET /tasks
+		r.Post("/", handler.CreateTask) // POST /tasks
 
 		r.Route("/{id}", func(r chi.Router) {
-			r.Get("/", handler.GetTaskByID) // GET /tasks/{id}
-			r.Patch("/", handler.UpdateTask) // PATCH /tasks/{id}
+			r.Get("/", handler.GetTaskByID)   // GET /tasks/{id}
+			r.Patch("/", handler.UpdateTask)  // PATCH /tasks/{id}
 			r.Delete("/", handler.DeleteTask) // DELETE /tasks/{id}
 		})
 	})
@@ -76,4 +84,3 @@ func main() {
 // │                   └── user.sql
 // ├── sqlc.yaml
 // └── migrations/ (если используешь миграции отдельно)
-
