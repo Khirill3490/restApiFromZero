@@ -68,3 +68,27 @@ Content-Type: application/json
 {
   "title": "oops",
 }
+
+### Login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "kirill@test.ru",
+  "password": "123123"
+}
+
+### Register
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "kirill@test.ru",
+  "password": "123123"
+}
+
+
+### Get tasks (private)
+GET {{baseUrl}}/tasks
+Authorization: Bearer {{token}}
+

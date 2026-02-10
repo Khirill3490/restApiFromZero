@@ -3,22 +3,19 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
+
+	"rest_api/internal/authjwt"
+	"rest_api/internal/config"
 	"rest_api/internal/db"
 	"rest_api/internal/db/sqlc"
 	"rest_api/internal/handlers"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	"rest_api/internal/httpserver"
 )
 
 func main() {
-	databaseURL := os.Getenv("DATABASE_URL")
-	if databaseURL == "" {
-		log.Fatal("DATABASE_URL environment variable is not set")
-	}
+	cfg := config.MustLoad()
 
-	conn, err := db.Connect(databaseURL)
+	conn, err := db.Connect(cfg.DatabaseURL)
 	if err != nil {
 		log.Fatalf("Не удалось подключиться к базе данных: %v", err)
 	}
@@ -26,37 +23,19 @@ func main() {
 
 	queries := sqlc.New(conn)
 
+	jwtSvc := authjwt.New(cfg.JWTSecret, cfg.AccessTokenTTL)
+
 	taskStore := db.NewTaskStore(queries)
 	userStore := db.NewUserStore(queries)
 
-	handler := handlers.NewHandler(taskStore, userStore)
+	h := handlers.NewHandler(taskStore, userStore, jwtSvc)
 
-	r := chi.NewRouter()
+	router := httpserver.NewRouter(h)
 
-	// Полезные middleware
-	r.Use(middleware.Logger)    // логирует все запросы
-	r.Use(middleware.Recoverer) // не даёт серверу упасть при panic
-
-	r.Route("/auth", func(r chi.Router) {
-		r.Post("/register", handler.Register)
-	})
-	// 6) Роуты
-	r.Route("/tasks", func(r chi.Router) {
-		r.Get("/", handler.GetAllTasks) // GET /tasks
-		r.Post("/", handler.CreateTask) // POST /tasks
-
-		r.Route("/{id}", func(r chi.Router) {
-			r.Get("/", handler.GetTaskByID)   // GET /tasks/{id}
-			r.Patch("/", handler.UpdateTask)  // PATCH /tasks/{id}
-			r.Delete("/", handler.DeleteTask) // DELETE /tasks/{id}
-		})
-	})
-
-	// 7) Старт сервера
-	addr := ":8080"
-	log.Println("Server started on", addr)
-	log.Fatal(http.ListenAndServe(addr, r))
+	log.Println("Сервер запущен на адресе", cfg.Addr)
+	log.Fatal(http.ListenAndServe(cfg.Addr, router))
 }
+
 
 // yourapp/
 // ├── cmd/api/main.go

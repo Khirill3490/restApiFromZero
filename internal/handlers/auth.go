@@ -59,3 +59,48 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 
 	respondJSON(w, http.StatusCreated, user)
 }
+
+func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
+	var input models.LoginInput
+
+	dec := json.NewDecoder(r.Body)
+	dec.DisallowUnknownFields()
+
+	if err := dec.Decode(&input); err != nil {
+		respondError(w, http.StatusBadRequest, "нкорректный json")
+		return
+	}
+
+	input.Email = strings.TrimSpace(input.Email)
+	if input.Email == "" || input.Password == "" {
+		respondError(w, http.StatusBadRequest, "email и password обязательны")
+		return
+	}
+
+	user, err := h.userStore.GetByEmail(r.Context(), input.Email)
+	if err != nil {
+		// Важно: чтобы не “палить”, существует ли email — возвращаем 401 одинаково.
+		if errors.Is(err, repository.ErrNotFound) {
+			respondError(w, http.StatusUnauthorized, "неверные credentials	")
+			return
+		}
+		respondError(w, http.StatusInternalServerError, "ошибка при получении пользователя")
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(input.Password)); err != nil {
+		respondError(w, http.StatusUnauthorized, "неверные credentials")
+		return
+	}
+
+	accessToken, err := h.jwt.GenerateAccessToken(user.ID)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "ошибка при генерации токена")
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]any{
+		"access_token": accessToken,
+		"user":         user,
+	})
+}

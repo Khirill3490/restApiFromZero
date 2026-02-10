@@ -24,10 +24,9 @@ func (s *UserStore) Create(ctx context.Context, email, passwordHash string) (*mo
 		PasswordHash: passwordHash,
 	})
 	if err != nil {
-		// UNIQUE violation
-		// if isUniqueViolation(err) {
-		// 	return nil, repository.ErrConflict
-		// }
+		if isUniqueViolation(err) {
+			return nil, repository.ErrConflict
+		}
 		return nil, err
 	}
 
