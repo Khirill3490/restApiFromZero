@@ -93,6 +93,21 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	refreshToken, err := h.jwt.GenerateRefreshToken(user.ID)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "ошибка при генерации refresh токена")
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		Path:     "/auth/refresh",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		// Secure: true, // включим позже, когда будет https
+	})
+
 	accessToken, err := h.jwt.GenerateAccessToken(user.ID)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "ошибка при генерации токена")

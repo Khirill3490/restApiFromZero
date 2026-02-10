@@ -92,3 +92,7 @@ Content-Type: application/json
 GET {{baseUrl}}/tasks
 Authorization: Bearer {{token}}
 
+### Refresh (manual cookie)
+POST {{baseUrl}}/auth/refresh
+Cookie: refresh_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzEzMjc3MzIsImlhdCI6MTc3MDcyMjkzMiwic3ViIjoxLCJ0eXAiOiJyZWZyZXNoIn0.7L0PWrYH2WS-mf7x6qfoOkmH1CTjJShHLgkKDq0fkEE
+

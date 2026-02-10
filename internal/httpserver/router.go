@@ -20,6 +20,7 @@ func NewRouter(h *handlers.Handler) http.Handler {
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/register", h.Register)
 		r.Post("/login", h.Login)
+		r.Post("/refresh", h.Refresh)
 	})
 
 	// private tasks routes
