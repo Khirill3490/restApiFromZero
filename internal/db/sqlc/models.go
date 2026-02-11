@@ -5,8 +5,18 @@
 package sqlc
 
 import (
+	"database/sql"
 	"time"
 )
+
+type RefreshSession struct {
+	ID        int64
+	UserID    int64
+	TokenHash string
+	ExpiresAt time.Time
+	CreatedAt time.Time
+	RevokedAt sql.NullTime
+}
 
 type Task struct {
 	ID          int64

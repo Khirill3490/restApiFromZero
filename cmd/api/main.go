@@ -23,7 +23,7 @@ func main() {
 
 	queries := sqlc.New(conn)
 
-	jwtSvc := authjwt.New(cfg.JWTSecret, cfg.AccessTokenTTL)
+	jwtSvc := authjwt.New(cfg.JWTSecret, cfg.AccessTokenTTL, cfg.RefreshTokenTTL)
 
 	taskStore := db.NewTaskStore(queries)
 	userStore := db.NewUserStore(queries)

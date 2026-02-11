@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -99,13 +100,17 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	refreshTTL := h.jwt.RefreshTTL()
+
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
 		Value:    refreshToken,
 		Path:     "/auth/refresh",
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
-		// Secure: true, // включим позже, когда будет https
+
+		MaxAge:  int(refreshTTL.Seconds()),
+		Expires: time.Now().Add(refreshTTL),
 	})
 
 	accessToken, err := h.jwt.GenerateAccessToken(user.ID)
@@ -118,4 +123,17 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		"access_token": accessToken,
 		"user":         user,
 	})
+}
+
+func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		Path:     "/auth/refresh",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   -1, // удалить cookie
+	})
+
+	w.WriteHeader(http.StatusNoContent)
 }

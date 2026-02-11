@@ -1,4 +1,6 @@
 @baseUrl = http://localhost:8080
+@email = test1@test.com
+@password = 123123
 
 ### =========================
 ### CREATE TASK
@@ -74,8 +76,8 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "kirill@test.ru",
-  "password": "123123"
+  "email": "{{email}}",
+  "password": "{{password}}"
 }
 
 ### Register
@@ -83,16 +85,18 @@ POST {{baseUrl}}/auth/register
 Content-Type: application/json
 
 {
-  "email": "kirill@test.ru",
-  "password": "123123"
+  "email": "{{email}}",
+  "password": "{{password}}"
 }
 
 
 ### Get tasks (private)
 GET {{baseUrl}}/tasks
-Authorization: Bearer {{token}}
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzA4MDQyMzgsImlhdCI6MTc3MDgwMzMzOCwic3ViIjo0fQ.3Y4WGpnaQ_wAN0cL7iU8aXcZ13kaKVedY2XuEcuKTtM
 
 ### Refresh (manual cookie)
 POST {{baseUrl}}/auth/refresh
-Cookie: refresh_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzEzMjc3MzIsImlhdCI6MTc3MDcyMjkzMiwic3ViIjoxLCJ0eXAiOiJyZWZyZXNoIn0.7L0PWrYH2WS-mf7x6qfoOkmH1CTjJShHLgkKDq0fkEE
+Cookie: refresh_token=yJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzA4OTAwNTAsImlhdCI6MTc3MDgwMzY1MCwic3ViIjo0LCJ0eXAiOiJyZWZyZXNoIn0.E6n9OYKpsChrJP2hHOsK2MhekwKaUBBsOqbEtueo2TI
 
+### Logout
+POST {{baseUrl}}/auth/logout
