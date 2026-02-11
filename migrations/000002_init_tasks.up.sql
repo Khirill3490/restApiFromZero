@@ -8,5 +8,8 @@ CREATE TABLE tasks (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Уникальный title В РАМКАХ одного пользователя
 CREATE UNIQUE INDEX tasks_user_title_unique ON tasks(user_id, title);
+
+-- Для быстрых выборок задач пользователя
 CREATE INDEX tasks_user_id_idx ON tasks(user_id);

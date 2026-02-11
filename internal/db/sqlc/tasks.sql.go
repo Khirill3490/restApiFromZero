@@ -10,22 +10,29 @@ import (
 )
 
 const createTask = `-- name: CreateTask :one
-INSERT INTO tasks (title, description, completed)
-VALUES ($1, $2, $3)
-RETURNING id, title, description, completed, created_at, updated_at
+INSERT INTO tasks (user_id, title, description, completed)
+VALUES ($1, $2, $3, $4)
+RETURNING id, user_id, title, description, completed, created_at, updated_at
 `
 
 type CreateTaskParams struct {
+	UserID      int64
 	Title       string
 	Description string
 	Completed   bool
 }
 
 func (q *Queries) CreateTask(ctx context.Context, arg CreateTaskParams) (Task, error) {
-	row := q.db.QueryRowContext(ctx, createTask, arg.Title, arg.Description, arg.Completed)
+	row := q.db.QueryRowContext(ctx, createTask,
+		arg.UserID,
+		arg.Title,
+		arg.Description,
+		arg.Completed,
+	)
 	var i Task
 	err := row.Scan(
 		&i.ID,
+		&i.UserID,
 		&i.Title,
 		&i.Description,
 		&i.Completed,
@@ -35,27 +42,41 @@ func (q *Queries) CreateTask(ctx context.Context, arg CreateTaskParams) (Task, e
 	return i, err
 }
 
-const deleteTask = `-- name: DeleteTask :exec
+const deleteTaskByUser = `-- name: DeleteTaskByUser :one
 DELETE FROM tasks
-WHERE id = $1
+WHERE id = $1 AND user_id = $2
+RETURNING id
 `
 
-func (q *Queries) DeleteTask(ctx context.Context, id int64) error {
-	_, err := q.db.ExecContext(ctx, deleteTask, id)
-	return err
+type DeleteTaskByUserParams struct {
+	ID     int64
+	UserID int64
 }
 
-const getTaskByID = `-- name: GetTaskByID :one
-SELECT id, title, description, completed, created_at, updated_at
+func (q *Queries) DeleteTaskByUser(ctx context.Context, arg DeleteTaskByUserParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, deleteTaskByUser, arg.ID, arg.UserID)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
+const getTaskByIDByUser = `-- name: GetTaskByIDByUser :one
+SELECT id, user_id, title, description, completed, created_at, updated_at
 FROM tasks
-WHERE id = $1
+WHERE id = $1 AND user_id = $2
 `
 
-func (q *Queries) GetTaskByID(ctx context.Context, id int64) (Task, error) {
-	row := q.db.QueryRowContext(ctx, getTaskByID, id)
+type GetTaskByIDByUserParams struct {
+	ID     int64
+	UserID int64
+}
+
+func (q *Queries) GetTaskByIDByUser(ctx context.Context, arg GetTaskByIDByUserParams) (Task, error) {
+	row := q.db.QueryRowContext(ctx, getTaskByIDByUser, arg.ID, arg.UserID)
 	var i Task
 	err := row.Scan(
 		&i.ID,
+		&i.UserID,
 		&i.Title,
 		&i.Description,
 		&i.Completed,
@@ -65,20 +86,22 @@ func (q *Queries) GetTaskByID(ctx context.Context, id int64) (Task, error) {
 	return i, err
 }
 
-const listTasks = `-- name: ListTasks :many
-SELECT id, title, description, completed, created_at, updated_at
+const listTasksByUser = `-- name: ListTasksByUser :many
+SELECT id, user_id, title, description, completed, created_at, updated_at
 FROM tasks
+WHERE user_id = $1
 ORDER BY created_at DESC
-LIMIT $1 OFFSET $2
+LIMIT $2 OFFSET $3
 `
 
-type ListTasksParams struct {
+type ListTasksByUserParams struct {
+	UserID int64
 	Limit  int32
 	Offset int32
 }
 
-func (q *Queries) ListTasks(ctx context.Context, arg ListTasksParams) ([]Task, error) {
-	rows, err := q.db.QueryContext(ctx, listTasks, arg.Limit, arg.Offset)
+func (q *Queries) ListTasksByUser(ctx context.Context, arg ListTasksByUserParams) ([]Task, error) {
+	rows, err := q.db.QueryContext(ctx, listTasksByUser, arg.UserID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -88,6 +111,7 @@ func (q *Queries) ListTasks(ctx context.Context, arg ListTasksParams) ([]Task, e
 		var i Task
 		if err := rows.Scan(
 			&i.ID,
+			&i.UserID,
 			&i.Title,
 			&i.Description,
 			&i.Completed,
@@ -107,27 +131,29 @@ func (q *Queries) ListTasks(ctx context.Context, arg ListTasksParams) ([]Task, e
 	return items, nil
 }
 
-const updateTask = `-- name: UpdateTask :one
+const updateTaskByUser = `-- name: UpdateTaskByUser :one
 UPDATE tasks
 SET
-  title = $2,
-  description = $3,
-  completed = $4,
+  title = $3,
+  description = $4,
+  completed = $5,
   updated_at = CURRENT_TIMESTAMP
-WHERE id = $1
-RETURNING id, title, description, completed, created_at, updated_at
+WHERE id = $1 AND user_id = $2
+RETURNING id, user_id, title, description, completed, created_at, updated_at
 `
 
-type UpdateTaskParams struct {
+type UpdateTaskByUserParams struct {
 	ID          int64
+	UserID      int64
 	Title       string
 	Description string
 	Completed   bool
 }
 
-func (q *Queries) UpdateTask(ctx context.Context, arg UpdateTaskParams) (Task, error) {
-	row := q.db.QueryRowContext(ctx, updateTask,
+func (q *Queries) UpdateTaskByUser(ctx context.Context, arg UpdateTaskByUserParams) (Task, error) {
+	row := q.db.QueryRowContext(ctx, updateTaskByUser,
 		arg.ID,
+		arg.UserID,
 		arg.Title,
 		arg.Description,
 		arg.Completed,
@@ -135,6 +161,7 @@ func (q *Queries) UpdateTask(ctx context.Context, arg UpdateTaskParams) (Task, e
 	var i Task
 	err := row.Scan(
 		&i.ID,
+		&i.UserID,
 		&i.Title,
 		&i.Description,
 		&i.Completed,

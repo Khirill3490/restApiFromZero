@@ -1,10 +1,6 @@
-CREATE TABLE tasks (
+CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    description TEXT NOT NULL DEFAULT '',
-    completed BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-
-CREATE UNIQUE INDEX tasks_title_unique ON tasks(title);

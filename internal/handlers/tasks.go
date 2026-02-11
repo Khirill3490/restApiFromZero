@@ -12,7 +12,13 @@ import (
 )
 
 func (h *Handler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
-	tasks, err := h.taskStore.List(r.Context(), 100, 0)
+	userID, ok := UserIDFromContext(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
+	tasks, err := h.taskStore.ListByUser(r.Context(), userID, 100, 0)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "Failed to fetch tasks")
 		return
@@ -22,6 +28,12 @@ func (h *Handler) GetAllTasks(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetTaskByID(w http.ResponseWriter, r *http.Request) {
+	userID, ok := UserIDFromContext(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -29,7 +41,7 @@ func (h *Handler) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := h.taskStore.GetByID(r.Context(), id)
+	task, err := h.taskStore.GetByID(r.Context(), userID, id)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			respondError(w, http.StatusNotFound, "Task not found")
@@ -43,6 +55,12 @@ func (h *Handler) GetTaskByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
+	userID, ok := UserIDFromContext(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
 	var input models.CreateTaskInput
 
 	decoder := json.NewDecoder(r.Body)
@@ -62,7 +80,7 @@ func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := h.taskStore.Create(r.Context(), input)
+	task, err := h.taskStore.Create(r.Context(), userID, input)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "Ошибка при создании задачи")
 		return
@@ -72,6 +90,12 @@ func (h *Handler) CreateTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) UpdateTask(w http.ResponseWriter, r *http.Request) {
+	userID, ok := UserIDFromContext(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -89,7 +113,7 @@ func (h *Handler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := h.taskStore.Update(r.Context(), id, input)
+	task, err := h.taskStore.Update(r.Context(), userID, id, input)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			respondError(w, http.StatusNotFound, "Task not found")
@@ -103,6 +127,12 @@ func (h *Handler) UpdateTask(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) DeleteTask(w http.ResponseWriter, r *http.Request) {
+	userID, ok := UserIDFromContext(r.Context())
+	if !ok {
+		respondError(w, http.StatusUnauthorized, "Unauthorized")
+		return
+	}
+
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -110,7 +140,7 @@ func (h *Handler) DeleteTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.taskStore.Delete(r.Context(), id)
+	err = h.taskStore.Delete(r.Context(), userID, id)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			respondError(w, http.StatusNotFound, "Task not found")

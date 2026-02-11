@@ -6,9 +6,10 @@ import (
 )
 
 type TaskRepository interface {
-	List(ctx context.Context, limit, offset int32) ([]models.Task, error)
-	GetByID(ctx context.Context, id int64) (*models.Task, error)
-	Create(ctx context.Context, input models.CreateTaskInput) (*models.Task, error)
-	Update(ctx context.Context, id int64, input models.UpdateTaskInput) (*models.Task, error)
-	Delete(ctx context.Context, id int64) error
+	ListByUser(ctx context.Context, userID int64, limit, offset int32) ([]models.Task, error)
+	GetByID(ctx context.Context, userID, id int64) (*models.Task, error)
+	Create(ctx context.Context, userID int64, input models.CreateTaskInput) (*models.Task, error)
+	Update(ctx context.Context, userID, id int64, input models.UpdateTaskInput) (*models.Task, error)
+	Delete(ctx context.Context, userID, id int64) error
 }
+
