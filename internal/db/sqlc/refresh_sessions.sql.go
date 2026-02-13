@@ -56,13 +56,13 @@ func (q *Queries) GetRefreshSessionByHash(ctx context.Context, tokenHash string)
 	return i, err
 }
 
-const revokeRefreshSessionByHash = `-- name: RevokeRefreshSessionByHash :exec
+const revokeRefreshSessionByID = `-- name: RevokeRefreshSessionByID :exec
 UPDATE refresh_sessions
 SET revoked_at = now()
-WHERE token_hash = $1 AND revoked_at IS NULL
+WHERE id = $1 AND revoked_at IS NULL
 `
 
-func (q *Queries) RevokeRefreshSessionByHash(ctx context.Context, tokenHash string) error {
-	_, err := q.db.ExecContext(ctx, revokeRefreshSessionByHash, tokenHash)
+func (q *Queries) RevokeRefreshSessionByID(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, revokeRefreshSessionByID, id)
 	return err
 }

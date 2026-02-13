@@ -27,15 +27,15 @@ func main() {
 
 	taskStore := db.NewTaskStore(queries)
 	userStore := db.NewUserStore(queries)
+	refreshStore := db.NewRefreshSessionStore(queries)
 
-	h := handlers.NewHandler(taskStore, userStore, jwtSvc)
+	h := handlers.NewHandler(taskStore, userStore, refreshStore, jwtSvc)
 
 	router := httpserver.NewRouter(h)
 
 	log.Println("Сервер запущен на адресе", cfg.Addr)
 	log.Fatal(http.ListenAndServe(cfg.Addr, router))
 }
-
 
 // yourapp/
 // ├── cmd/api/main.go

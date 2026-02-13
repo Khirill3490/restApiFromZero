@@ -8,7 +8,7 @@ SELECT id, user_id, token_hash, expires_at, created_at, revoked_at
 FROM refresh_sessions
 WHERE token_hash = $1;
 
--- name: RevokeRefreshSessionByHash :exec
+-- name: RevokeRefreshSessionByID :exec
 UPDATE refresh_sessions
 SET revoked_at = now()
-WHERE token_hash = $1 AND revoked_at IS NULL;
+WHERE id = $1 AND revoked_at IS NULL;
