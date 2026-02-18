@@ -80,9 +80,8 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.userStore.GetByEmail(r.Context(), input.Email)
 	if err != nil {
-		// Важно: чтобы не “палить”, существует ли email — возвращаем 401 одинаково.
 		if errors.Is(err, repository.ErrNotFound) {
-			respondError(w, http.StatusUnauthorized, "неверные credentials	")
+			respondError(w, http.StatusUnauthorized, "неверные credentials")
 			return
 		}
 		respondError(w, http.StatusInternalServerError, "ошибка при получении пользователя")
@@ -100,7 +99,15 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// ✅ NEW: persist refresh session
 	refreshTTL := h.jwt.RefreshTTL()
+	refreshExpiresAt := time.Now().Add(refreshTTL)
+
+	tokenHash := hashToken(refreshToken)
+	if _, err := h.refreshStore.Create(r.Context(), user.ID, tokenHash, refreshExpiresAt); err != nil {
+		respondError(w, http.StatusInternalServerError, "ошибка при сохранении refresh-сессии")
+		return
+	}
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
@@ -110,7 +117,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteLaxMode,
 
 		MaxAge:  int(refreshTTL.Seconds()),
-		Expires: time.Now().Add(refreshTTL),
+		Expires: refreshExpiresAt,
 	})
 
 	accessToken, err := h.jwt.GenerateAccessToken(user.ID)
@@ -125,15 +132,35 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
-	http.SetCookie(w, &http.Cookie{
-		Name:     "refresh_token",
-		Value:    "",
-		Path:     "/auth/refresh",
-		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
-		MaxAge:   -1, // удалить cookie
-	})
 
-	w.WriteHeader(http.StatusNoContent)
+func (h *Handler) Logout(w http.ResponseWriter, r *http.Request) {
+	// Всегда чистим cookie, даже если в БД ничего не нашли — logout best-effort
+	defer clearRefreshCookie(w)
+
+	c, err := r.Cookie("refresh_token")
+	if err != nil || c.Value == "" {
+		respondJSON(w, http.StatusOK, map[string]any{
+			"message": "logged out",
+		})
+		return
+	}
+
+	refreshToken := c.Value
+	tokenHash := hashToken(refreshToken)
+
+	session, err := h.refreshStore.GetByHash(r.Context(), tokenHash)
+	if err != nil {
+		// Не нашли — ок. Ошибка БД — тоже не палим наружу.
+		respondJSON(w, http.StatusOK, map[string]any{
+			"message": "logged out",
+		})
+		return
+	}
+
+	_ = h.refreshStore.RevokeByID(r.Context(), session.ID)
+
+	respondJSON(w, http.StatusOK, map[string]any{
+		"message": "logged out",
+	})
 }
+

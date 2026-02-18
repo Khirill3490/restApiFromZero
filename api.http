@@ -95,7 +95,6 @@ GET {{baseUrl}}/tasks
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzA4MTgyNjIsImlhdCI6MTc3MDgxNzM2Miwic3ViIjoxfQ.gNGlCz_s-9ZSqVcoygWFgRCtqc5g_C77774rrUjpubU
 ### Refresh (manual cookie)
 POST {{baseUrl}}/auth/refresh
-Cookie: refresh_token=yJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzA4OTAwNTAsImlhdCI6MTc3MDgwMzY1MCwic3ViIjo0LCJ0eXAiOiJyZWZyZXNoIn0.E6n9OYKpsChrJP2hHOsK2MhekwKaUBBsOqbEtueo2TI
-
+Cookie: refresh_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzE1MDc3NzQsImlhdCI6MTc3MTQyMTM3NCwic3ViIjoxLCJ0eXAiOiJyZWZyZXNoIn0.I8c4AMv4D_WLAYKFtnjHIRmY2HCgb-AOADYuow120Qg
 ### Logout
 POST {{baseUrl}}/auth/logout
